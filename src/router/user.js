@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const userController = require("../controller/user");
 const passport = require("passport");
+const jwt = require("jsonwebtoken");
 require("../../auth");
 
 router.get("/", userController.test);
@@ -13,13 +14,19 @@ router.get(
 router.get(
   "/auth/google/callback",
   passport.authenticate("google", {
-    successRedirect: "/protected",
+    successRedirect: "/halamanwebsite",
     failureRedirect: "/auth/google/failure",
   })
 );
 
-router.get("/protected", (req, res) => {
-  res.send(`Hello ${req.user.displayName}`);
+router.get("/halamanwebsite", (req, res) => {
+  if (req.user) {
+    const payload = req.user;
+    const token = jwt.sign(payload, "ini rahasia");
+    res.json(token);
+  } else {
+    res.json("belum login kah?");
+  }
 });
 
 module.exports = router;

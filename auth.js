@@ -1,6 +1,6 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth2").Strategy;
-
+const jwt = require("jsonwebtoken");
 const db = require("./src/database/models");
 const { user } = db;
 
@@ -13,7 +13,13 @@ passport.use(
       callbackURL: "http://localhost:3000/auth/google/callback",
       passReqToCallback: true,
     },
-    async (request, accessToken, refreshToken, profile, done) => {
+    async (req, res, accessToken, refreshToken, profile, done) => {
+      const existingUser = await user.findOne({
+        where: { email: profile.email },
+      });
+      if (existingUser) {
+        return done(null, existingUser);
+      }
       const data = await user.create({
         fullname: profile.displayName,
         username: profile.displayName,
