@@ -4,6 +4,8 @@ const userController = require("../controller/user");
 const passport = require("passport");
 const jwt = require("jsonwebtoken");
 require("../../auth");
+const db = require("../database/models");
+const { user } = db;
 
 router.get("/", userController.test);
 router.get(
@@ -14,16 +16,21 @@ router.get(
 router.get(
   "/auth/google/callback",
   passport.authenticate("google", {
-    successRedirect: "/halamanwebsite",
     failureRedirect: "/auth/google/failure",
-  })
+  }),
+  function (req, res) {
+    if (req.user) {
+      const data = req.user;
+      const payload = data.dataValues;
+      const token = jwt.sign(payload, "ini rahasia");
+      res.status(201).json({ token });
+    }
+  }
 );
 
-router.get("/halamanwebsite", (req, res) => {
+router.get("/token/from-google", (req, res) => {
   if (req.user) {
-    const payload = req.user;
-    const token = jwt.sign(payload, "ini rahasia");
-    res.json(token);
+    res.send(req.user);
   } else {
     res.json("belum login kah?");
   }
