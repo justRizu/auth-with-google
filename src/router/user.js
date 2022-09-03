@@ -3,7 +3,7 @@ const router = express.Router();
 const userController = require("../controller/user");
 const passport = require("passport");
 const jwt = require("jsonwebtoken");
-require("../../auth");
+require("../auth/google");
 const db = require("../database/models");
 const { user } = db;
 
@@ -18,22 +18,26 @@ router.get(
   passport.authenticate("google", {
     failureRedirect: "/auth/google/failure",
   }),
-  function (req, res) {
+  async (req, res) => {
     if (req.user) {
-      const data = req.user;
-      const payload = data.dataValues;
-      const token = jwt.sign(payload, "ini rahasia");
+      const athlete = req.user;
+      let existingUser = await user.findOne({
+        where: { email: athlete.email },
+      });
+      if (!existingUser) {
+        const data = await user.create({
+          username: athlete.displayName,
+          fullname: athlete.displayName,
+          email: athlete.email,
+          isActive: athlete.verified,
+        });
+        existingUser = data;
+      }
+      const payload = existingUser.dataValues;
+      const token = jwt.sign(payload, "secret");
       res.status(201).json({ token });
     }
   }
 );
-
-router.get("/token/from-google", (req, res) => {
-  if (req.user) {
-    res.send(req.user);
-  } else {
-    res.json("belum login kah?");
-  }
-});
 
 module.exports = router;

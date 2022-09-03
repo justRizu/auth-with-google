@@ -1,21 +1,19 @@
 const passport = require("passport");
-const GoogleStrategy = require("passport-google-oauth2").Strategy;
+const FacebookStrategy = require("passport-facebook").Strategy;
 const jwt = require("jsonwebtoken");
-const db = require("./src/database/models");
+const db = require("../database/models");
 const { user } = db;
-
 passport.use(
-  new GoogleStrategy(
+  new FacebookStrategy(
     {
-      clientID:
-        "162310143556-js6kb5ur22jt2mr4b40bidcgnt6im5l6.apps.googleusercontent.com",
-      clientSecret: "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",
-      callbackURL: "http://localhost:3000/auth/google/callback",
-      passReqToCallback: true,
+      clientID: "635628774556408",
+      clientSecret: "e2e625ee81eba2dba3fc30203ddc1f25",
+      callbackURL: "http://localhost:3000/token",
+      profileFields: ["id", "displayName", "photos", "email"],
     },
-    async (req, res, accessToken, profile, done) => {
+    async (accessToken, refreshToken, profile, done) => {
       const existingUser = await user.findOne({
-        where: { email: profile.email },
+        where: { email: profile.emails[0].value },
       });
       if (existingUser) {
         return done(null, existingUser);
@@ -23,15 +21,15 @@ passport.use(
       const data = await user.create({
         fullname: profile.displayName,
         username: profile.displayName,
-        email: profile.email,
+        email: profile.emails[0].value,
       });
       const updateIsActive = await user.update(
         {
           isActive: true,
         },
-        { where: { email: profile.email } }
+        { where: { email: profile.emails[0].value } }
       );
-      return done(null, data);
+      console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
     }
   )
 );

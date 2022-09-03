@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const userController = require("../controller/user");
 const passport = require("passport");
-require("../../authFacebook");
+require("../auth/authFacebook");
 
 router.get(
   "/auth/facebook",
